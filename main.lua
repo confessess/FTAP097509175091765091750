@@ -3371,10 +3371,10 @@ do
     })
 end
 -- 1. Target Interaction Dropdown
-local PlayerDropdown = Tabs.Target:Section("Target Interaction")
-Tabs.Target:Dropdown({
+Tabs.Target:Section("Target Interaction")
+local PlayerDropdown = Tabs.Target:Dropdown({
     Name = "Select player for kick",
-    List = getPlayerList(),
+    Options = getPlayerList(),
     Default = nil,
     Callback = function(Value)
         selectedKickPlayer = getPlayerFromSelection(Value)
@@ -3385,13 +3385,20 @@ Tabs.Target:Dropdown({
 
 local function updateDropdown()
     local newList = getPlayerList()
-    
+
     if PlayerDropdown then
-        -- We use 'false' here so your current selection doesn't reset 
-        -- every time a random person joins the server.
-        PlayerDropdown:Refresh(newList, false)
+        local refreshFn = PlayerDropdown and PlayerDropdown.Refresh
+        if type(refreshFn) == "function" then
+            -- We use 'false' here so your current selection doesn't reset
+            -- every time a random person joins the server.
+            PlayerDropdown:Refresh(newList, false)
+        elseif type(PlayerDropdown.SetList) == "function" then
+            PlayerDropdown:SetList(newList)
+        elseif type(PlayerDropdown.Update) == "function" then
+            PlayerDropdown:Update(newList)
+        end
     end
-    
+
     -- Safety: If the target left the game, clear the variable
     if selectedKickPlayer and not selectedKickPlayer.Parent then
         selectedKickPlayer = nil
